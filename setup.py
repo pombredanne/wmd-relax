@@ -1,11 +1,14 @@
 from multiprocessing import cpu_count
 import os
-from setuptools import setup
+from setuptools import setup, Extension
 from setuptools.command.build_py import build_py
 from setuptools.dist import Distribution
 from shutil import copyfile
 from subprocess import check_call
 from sys import platform
+
+import numpy
+
 
 class SetupConfigurationError(Exception):
     pass
@@ -65,10 +68,15 @@ setup(
     author_email="vadim@sourced.tech",
     url="https://github.com/src-d/wmd-relax",
     download_url="https://github.com/src-d/wmd-relax",
-    py_modules=["libwmdrelax"],
+    ext_modules=[Extension("libwmdrelax", sources=["python.cc"],
+                           extra_compile_args=[
+        "-fopenmp" if platform != "darwin" else "", "-std=c++11",
+        "-march=native", "-ftree-vectorize"],
+        include_dirs=[numpy.get_include()])],
+    # py_modules=["libwmdrelax"],
     install_requires=["numpy"],
-    distclass=BinaryDistribution,
-    cmdclass={'build_py': CMakeBuild},
+    # distclass=BinaryDistribution,
+    # cmdclass={'build_py': CMakeBuild},
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
